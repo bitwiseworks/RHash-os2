@@ -144,7 +144,7 @@ wchar_t* rhash_wcsdup(const wchar_t* str, const char* srcfile, int srcline);
 
 /* get_ctz - count traling zero bits */
 #if (defined(__GNUC__) && (__GNUC__ > 3 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 4))) || \
-    (defined(__clang__) && __has_builtin(__builtin_ctz))
+    (defined(__clang__) /* && __has_builtin(__builtin_ctz)*/ )
 /* macro if GCC >= 3.4 or has clang __builtin_ctz() */
 # define get_ctz(x) __builtin_ctz(x)
 #else
