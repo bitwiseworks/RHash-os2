@@ -729,7 +729,7 @@ elif os2; then
   EXEC_EXT=".exe"
   SHARED_EXT=".dll"
   SHARED_PREFIX=""
-  SO_MAJ_EXT="_dll"
+  SO_MAJ_EXT="_dll.a"
   NEED_IMPLIB=yes
   NEED_SOLINK=no
 fi
