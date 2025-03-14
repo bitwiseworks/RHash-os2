@@ -2,6 +2,10 @@
 
 include config.mak
 
+VENDOR ?=community
+BUILD_INFO=\#\#1\#\# $(shell date +'%d %b %Y %H:%M:%S')     $(shell uname -n)
+BUILDLEVEL_INFO=@\#$(VENDOR):$(VERSION)\#@$(BUILD_INFO)::::$(RHASH_VERSION_PATCH)::
+
 HEADERS = algorithms.h byte_order.h plug_openssl.h rhash.h rhash_torrent.h aich.h blake2b.h blake2s.h crc32.h ed2k.h edonr.h hex.h md4.h md5.h sha1.h sha256.h sha512.h sha3.h ripemd-160.h gost12.h gost94.h has160.h snefru.h tiger.h tth.h torrent.h ustd.h util.h whirlpool.h
 SOURCES = algorithms.c byte_order.c plug_openssl.c rhash.c rhash_torrent.c aich.c blake2b.c blake2s.c crc32.c ed2k.c edonr.c hex.c md4.c md5.c sha1.c sha256.c sha512.c sha3.c ripemd-160.c gost12.c gost94.c has160.c snefru.c tiger.c tiger_sbox.c tth.c torrent.c util.c whirlpool.c whirlpool_sbox.c
 OBJECTS = $(SOURCES:.c=.o)
@@ -174,6 +178,12 @@ $(EXPORTS_FILE): $(LIB_HEADERS)
 	sed -ne '1s/.*/{ global:/p; s/^RHASH_API.* \(rhash_[a-z0-9_]*\)(.*/  \1;/p; $$s/.*/local: *; };/p' \
 	  $(LIB_HEADERS) | grep -v "$(EXPORTS_SKIP)" > $@
 
+$(LIBRHASH_DEF):
+	echo Creating $@...
+	echo "LIBRARY rhash INITINSTANCE TERMINSTANCE" > $@
+	echo "DESCRIPTION \"$(BUILDLEVEL_INFO)@@rhash\"" >> $@
+	echo "DATA MULTIPLE" >> $@
+
 $(LIBRHASH_SOLINK):
 	test "x$(LIBRHASH_SO_MAJ)" = "x$(LIBRHASH_SHARED)" || ( \
 	  rm -f $(LIBRHASH_SO_MAJ) && \
@@ -181,8 +191,8 @@ $(LIBRHASH_SOLINK):
 	rm -f $(LIBRHASH_SOLINK)
 	ln -s $(LIBRHASH_SO_MAJ) $(LIBRHASH_SOLINK)
 
-$(LIBRHASH_SHARED): $(SOURCES) $(EXPORTS_TARGET) $(SOLINK_TARGET)
-	$(CC) $(SHARED_CFLAGS) $(VERSION_CFLAGS) $(SOURCES) $(SHARED_LDFLAGS) -o $@
+$(LIBRHASH_SHARED): $(SOURCES) $(EXPORTS_TARGET) $(SOLINK_TARGET) $(LIBRHASH_DEF)
+	$(CC) $(SHARED_CFLAGS) $(VERSION_CFLAGS) $(SOURCES) $(LIBRHASH_DEF) $(SHARED_LDFLAGS) -o $@
 
 # build static library
 $(LIBRHASH_STATIC): $(OBJECTS)

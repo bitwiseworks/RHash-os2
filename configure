@@ -296,6 +296,8 @@ HAS_LIBRHASH=no
 HAS_BINDINGS=no
 RHASH_VERSION=
 RHASH_VERSION_MAJOR=
+RHASH_VERSION_MINOR=
+RHASH_VERSION_PATCH=
 RHASH_XVERSION=
 BINDINGS_VERSION=
 RHASH_SRC=
@@ -336,6 +338,8 @@ if test "$HAS_RHASH" = "yes" || test "$HAS_LIBRHASH" = "yes"; then
   _v2=$(echo $RHASH_VERSION | cut -d '.' -f 2)
   _v3=$(echo $RHASH_VERSION | cut -d '.' -f 3)
   RHASH_VERSION_MAJOR=$_v1
+  RHASH_VERSION_MINOR=$_v2
+  RHASH_VERSION_PATCH=$_v3
   RHASH_XVERSION=$(printf "0x%02x%02x%02x%02x" "$_v1" "$_v2" "$_v3" 0)
   test "$HAS_LIBRHASH" = "yes" && LIBRHASH_PC=dist/librhash.pc
 fi
@@ -674,7 +678,9 @@ has_optimization()
 }
 has_optimization && OPTLEVEL= || OPTLEVEL="-O2"
 test -n "$BUILD_DEBUG" && OPTNDEBUG= || OPTNDEBUG="-DNDEBUG"
+if ! os2; then
 OPTFLAGS="-pipe -ffunction-sections -fdata-sections"
+fi
 check_set_contains "-fno-omit-frame-pointer" $BUILD_EXTRA_CFLAGS $BUILD_DEBUG \
   || OPTFLAGS="$OPTFLAGS -fomit-frame-pointer"
 OPTFLAGS=$(join_params $BUILD_DEBUG $OPTLEVEL $OPTNDEBUG $OPTFLAGS)
@@ -719,6 +725,13 @@ elif darwin; then
 elif linux || bsd; then
   # use the full library version for the library file extension
   SHARED_EXT=".so.${RHASH_VERSION}"
+elif os2; then
+  EXEC_EXT=".exe"
+  SHARED_EXT=".dll"
+  SHARED_PREFIX=""
+  SO_MAJ_EXT="_dll"
+  NEED_IMPLIB=yes
+  NEED_SOLINK=no
 fi
 
 #####################################################################
@@ -800,6 +813,10 @@ if win32; then
 elif darwin; then
   LIBRHASH_SH_CFLAGS="-fpic"
   LIBRHASH_SH_LDFLAGS='-dynamiclib -Wl,-install_name,$(LIBDIR)/$@'
+elif os2; then
+  LIBRHASH_SH_CFLAGS="-DRHASH_EXPORTS"
+  LIBRHASH_SH_LDFLAGS="-Zdll"
+  LIBRHASH_RM_FILES="${LIBRHASH_IMPLIB} ${LIBRHASH_DEF}"
 else
   LIBRHASH_SH_CFLAGS="-fpic"
   LIBRHASH_SH_LDFLAGS="-shared -Wl${SHARED_VSCRIPT},-soname,\$(LIBRHASH_SO_MAJ)"
@@ -927,6 +944,9 @@ LIBRHASH_SHARED = librhash/$LIBRHASH_SHARED
 LIBRHASH_TYPE   = $LIBRHASH_TYPE
 LIBRHASH_PATH   = $LIBRHASH_PATH
 VERSION         = $RHASH_VERSION
+RHASH_VERSION_MAJOR = $RHASH_VERSION_MAJOR
+RHASH_VERSION_MINOR = $RHASH_VERSION_MINOR
+RHASH_VERSION_PATCH = $RHASH_VERSION_PATCH
 EXEC_EXT        = $EXEC_EXT
 BUILD_TARGETS   = $RHASH_BUILD_TARGETS
 TEST_OPTIONS    = $RHASH_TEST_OPTIONS
@@ -974,6 +994,10 @@ EXPORTS_SKIP     = $LIBRHASH_EXPORTS_SKIP
 RM_FILES         = $LIBRHASH_RM_FILES
 BUILD_TYPE       = $LIBRHASH_TYPE
 EXEC_EXT         = $EXEC_EXT
+VERSION          = $RHASH_VERSION
+RHASH_VERSION_MAJOR = $RHASH_VERSION_MAJOR
+RHASH_VERSION_MINOR = $RHASH_VERSION_MINOR
+RHASH_VERSION_PATCH = $RHASH_VERSION_PATCH
 
 EXPORTS_TARGET   = $LIBRHASH_EXPORTS_TARGET
 BUILD_TARGETS    = $LIBRHASH_BUILD_TARGETS
