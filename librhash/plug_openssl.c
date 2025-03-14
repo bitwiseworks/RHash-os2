@@ -181,11 +181,19 @@ rhash_hash_info rhash_updated_hash_info[RHASH_HASH_COUNT];
 #else  /* _WIN32 */
 # define GET_DLSYM(name) dlsym(handle, name)
 #endif /* _WIN32 */
+#if defined(__OS2__)
+#define LOAD_ADDR(n, name) \
+	p##name##_final = (os_fin_t)GET_DLSYM("_" #name "_Final"); \
+	rhash_openssl_hash_info[n].update = (pupdate_t)GET_DLSYM("_" #name "_Update"); \
+	rhash_openssl_hash_info[n].init = (rhash_openssl_hash_info[n].update && p##name##_final ? \
+		(pinit_t)GET_DLSYM("_" #name "_Init") : 0);
+#else
 #define LOAD_ADDR(n, name) \
 	p##name##_final = (os_fin_t)GET_DLSYM(#name "_Final"); \
 	rhash_openssl_hash_info[n].update = (pupdate_t)GET_DLSYM(#name "_Update"); \
 	rhash_openssl_hash_info[n].init = (rhash_openssl_hash_info[n].update && p##name##_final ? \
 		(pinit_t)GET_DLSYM(#name "_Init") : 0);
+#endif
 
 /**
  * Load OpenSSL DLL at runtime, store pointers to functions of all
@@ -230,6 +238,10 @@ static int load_openssl_runtime(void)
 		"libcrypto.so.1.0.0",
 		"libcrypto.so.0.9.8",
 		"libcrypto.so",
+#ifdef __OS2__
+		"crypto11.dll",
+		"crypto10.dll",
+#endif
 	};
 	void* handle = 0;
 	size_t i;
